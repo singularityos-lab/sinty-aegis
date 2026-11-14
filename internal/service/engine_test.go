@@ -128,6 +128,9 @@ func TestQuakeNearby(t *testing.T) {
 	if len(active) != 1 || active[0].Kind != alert.Earthquake || active[0].Severity != alert.Severe || !strings.HasPrefix(active[0].Headline, "M 5.6, Central Italy") {
 		t.Fatalf("active = %+v", active)
 	}
+	if !active[0].Danger() {
+		t.Fatal("a strong earthquake nearby is not a danger")
+	}
 	if err := e.Store.Dismiss(active[0].ID); err != alert.ErrHeld {
 		t.Fatalf("early dismiss = %v", err)
 	}
@@ -135,11 +138,11 @@ func TestQuakeNearby(t *testing.T) {
 
 func TestTestAlert(t *testing.T) {
 	e := engine(t, config.Default(), nil)
-	a := e.Test(alert.Tsunami)
+	a := e.Test(alert.Tsunami, true)
 	if !a.Test || a.Kind != alert.Tsunami || a.Severity != alert.Extreme || a.Instruction == "" {
 		t.Fatalf("test alert = %+v", a)
 	}
-	if b := e.Test("nonsense"); b.Kind != alert.National {
+	if b := e.Test("nonsense", false); b.Kind != alert.National || b.Danger() {
 		t.Fatalf("fallback kind = %v", b.Kind)
 	}
 	if len(e.Store.Active()) != 2 {

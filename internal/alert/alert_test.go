@@ -40,7 +40,7 @@ func TestHoldAndDismiss(t *testing.T) {
 func TestExpireKeepsHeldAlerts(t *testing.T) {
 	now := time.Date(2026, 11, 14, 10, 0, 0, 0, time.UTC)
 	s := NewStore(func() time.Time { return now }, nil)
-	s.Raise(Alert{ID: "old", Severity: Minor, Expires: now.Add(time.Minute)})
+	s.Raise(Alert{ID: "old", Severity: Extreme, Expires: now.Add(time.Minute)})
 	s.Raise(Alert{ID: "big", Severity: Extreme})
 	now = now.Add(2 * time.Minute)
 	s.Expire()
@@ -63,5 +63,23 @@ func TestOrder(t *testing.T) {
 	s.Raise(Alert{ID: "x", Severity: Extreme})
 	if a := s.Active(); a[0].ID != "x" {
 		t.Fatalf("order = %+v", a)
+	}
+}
+
+func TestDangerAndHold(t *testing.T) {
+	now := time.Date(2026, 11, 14, 10, 0, 0, 0, time.UTC)
+	s := NewStore(func() time.Time { return now }, nil)
+	storm := Alert{ID: "storm", Kind: Storm, Severity: Severe}
+	quake := Alert{ID: "quake", Kind: Earthquake, Severity: Severe}
+	if storm.Danger() || !quake.Danger() || !(Alert{Kind: Storm, Severity: Extreme}).Danger() || (Alert{Kind: Earthquake, Severity: Moderate}).Danger() {
+		t.Fatal("danger rule wrong")
+	}
+	s.Raise(storm)
+	s.Raise(quake)
+	if err := s.Dismiss("storm"); err != nil {
+		t.Fatalf("a storm warning could not be dismissed at once: %v", err)
+	}
+	if err := s.Dismiss("quake"); err != ErrHeld {
+		t.Fatalf("a dangerous alert was dismissed at once: %v", err)
 	}
 }

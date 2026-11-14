@@ -70,7 +70,18 @@ type Alert struct {
 	Test        bool
 }
 
+func (a Alert) Danger() bool {
+	switch a.Kind {
+	case Earthquake, Tsunami, National, Security, Volcano:
+		return a.Severity >= Severe
+	}
+	return a.Severity >= Extreme
+}
+
 func (a Alert) DismissableAt() time.Time {
+	if !a.Danger() {
+		return a.Raised
+	}
 	return a.Raised.Add(HoldTime)
 }
 

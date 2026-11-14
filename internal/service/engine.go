@@ -311,20 +311,33 @@ func (e *Engine) PollQuakes(ctx context.Context) {
 }
 
 var samples = map[alert.Kind][3]string{
-	alert.Earthquake: {"M 5.8, 12 km from you", "Strong shaking is possible. This is a test of Sinty Aegis.", "Drop, cover and hold on. Stay away from windows."},
-	alert.Tsunami:    {"Tsunami warning for your coast", "A tsunami is possible after a strong earthquake at sea. This is a test of Sinty Aegis.", "Move to high ground now. Do not wait for the first wave."},
-	alert.Flood:      {"Flood warning in your area", "Rivers are rising quickly. This is a test of Sinty Aegis.", "Leave basements and low ground. Do not drive through water."},
-	alert.Fire:       {"Wildfire near you", "A fire is spreading with the wind. This is a test of Sinty Aegis.", "Be ready to leave. Close windows and follow the authorities."},
-	alert.Storm:      {"Severe thunderstorm warning", "Heavy rain, hail and lightning are expected. This is a test of Sinty Aegis.", "Stay indoors and away from trees."},
-	alert.National:   {"National alert", "A message from your national authority. This is a test of Sinty Aegis.", "Follow the instructions of the authorities."},
+	alert.Earthquake: {"M 5.8, 12 km from you", "Strong shaking is possible.", "Drop, cover and hold on. Stay away from windows."},
+	alert.Tsunami:    {"Tsunami warning for your coast", "A tsunami is possible after a strong earthquake at sea.", "Move to high ground now. Do not wait for the first wave."},
+	alert.Flood:      {"Flood warning in your area", "Rivers are rising quickly.", "Leave basements and low ground. Do not drive through water."},
+	alert.Fire:       {"Wildfire near you", "A fire is spreading with the wind.", "Be ready to leave. Close windows and follow the authorities."},
+	alert.Storm:      {"Severe thunderstorm warning", "Heavy rain, hail and lightning are expected.", "Stay indoors and away from trees."},
+	alert.Wind:       {"Violent wind warning", "Gusts strong enough to bring down trees and power lines.", "Stay inside and away from windows."},
+	alert.Snow:       {"Blizzard warning", "Heavy snow and ice will make roads impassable.", "Do not travel. Keep warm and keep your phone charged."},
+	alert.Heat:       {"Extreme heat warning", "Dangerous temperatures are expected in the afternoon.", "Stay in the shade, drink water and check on older neighbours."},
+	alert.Cold:       {"Extreme cold warning", "Temperatures will fall far below freezing tonight.", "Stay indoors and protect water pipes."},
+	alert.Volcano:    {"Volcanic eruption warning", "Ash fall is expected downwind of the volcano.", "Stay indoors, close windows and wear a mask outside."},
+	alert.Landslide:  {"Landslide warning", "The ground on steep slopes is unstable after the rain.", "Leave houses below steep slopes and stay off mountain roads."},
+	alert.Health:     {"Public health alert", "Tap water in your area may be unsafe to drink.", "Boil water before drinking it until further notice."},
+	alert.Security:   {"Public safety alert", "The police ask everyone in the area to stay inside.", "Lock doors, stay away from windows and wait for the all clear."},
+	alert.National:   {"National alert", "A message from your national authority.", "Follow the instructions of the authorities."},
+	alert.Other:      {"Emergency alert", "An authority issued an alert for your area.", "Follow the instructions of the authorities."},
 }
 
-func (e *Engine) Test(kind alert.Kind) alert.Alert {
+func (e *Engine) Test(kind alert.Kind, danger bool) alert.Alert {
 	s, ok := samples[kind]
 	if !ok {
 		kind, s = alert.National, samples[alert.National]
 	}
-	a := alert.Alert{ID: fmt.Sprintf("test/%s/%d", kind, time.Now().UnixNano()), Kind: kind, Severity: alert.Extreme, Headline: s[0], Description: s[1], Instruction: s[2], Area: "Test", Source: "Sinty Aegis", Sent: time.Now(), Expires: time.Now().Add(30 * time.Minute), Test: true}
+	severity := alert.Extreme
+	if !danger {
+		severity = alert.Moderate
+	}
+	a := alert.Alert{ID: fmt.Sprintf("test/%s/%d", kind, time.Now().UnixNano()), Kind: kind, Severity: severity, Headline: s[0], Description: s[1] + " This is a test of Sinty Aegis.", Instruction: s[2], Area: "Test", Source: "Sinty Aegis", Sent: time.Now(), Expires: time.Now().Add(30 * time.Minute), Test: true}
 	e.Store.Raise(a)
 	return a
 }

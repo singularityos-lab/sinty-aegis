@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/godbus/dbus/v5"
@@ -36,6 +37,7 @@ type wireAlert struct {
 	Raised        int64  `json:"raised"`
 	DismissableAt int64  `json:"dismissable_at"`
 	Test          bool   `json:"test"`
+	Danger        bool   `json:"danger"`
 }
 
 func unix(t time.Time) int64 {
@@ -46,7 +48,7 @@ func unix(t time.Time) int64 {
 }
 
 func encode(a alert.Alert) wireAlert {
-	return wireAlert{a.ID, string(a.Kind), a.Severity.String(), a.Headline, a.Description, a.Instruction, a.Area, a.Source, a.Link, unix(a.Sent), unix(a.Expires), unix(a.Raised), unix(a.DismissableAt()), a.Test}
+	return wireAlert{a.ID, string(a.Kind), a.Severity.String(), a.Headline, a.Description, a.Instruction, a.Area, a.Source, a.Link, unix(a.Sent), unix(a.Expires), unix(a.Raised), unix(a.DismissableAt()), a.Test, a.Danger()}
 }
 
 func fail(err error) *dbus.Error {
@@ -71,7 +73,8 @@ func (b *Bus) Dismiss(id string) *dbus.Error {
 }
 
 func (b *Bus) Test(kind string) (string, *dbus.Error) {
-	return b.engine.Test(alert.Kind(kind)).ID, nil
+	name, level, _ := strings.Cut(kind, ":")
+	return b.engine.Test(alert.Kind(name), level != "notice").ID, nil
 }
 
 func (b *Bus) Config() (string, *dbus.Error) {
