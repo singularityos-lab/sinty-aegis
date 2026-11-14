@@ -1,0 +1,6 @@
+/sinty-aegisd
+*.test
+*.out
+
+.DS_Store
+*.swp

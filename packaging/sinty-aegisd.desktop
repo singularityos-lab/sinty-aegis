@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Sinty Aegis
+Exec=/usr/libexec/sinty-aegisd
+NoDisplay=true
+X-GNOME-Autostart-Phase=Initialization
